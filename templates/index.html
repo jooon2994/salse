@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en" class=""> <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ahadu Market</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Custom Tailwind config to match tailwind.config.js
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'custom-blue': {
+                            light: '#3b82f6',
+                            DEFAULT: '#2563eb',
+                            dark: '#1d4ed8',
+                        },
+                        'light-bg': '#f9fafb',
+                        'light-text': '#1f2937',
+                        'light-card': '#ffffff',
+                        'light-border': '#e5e7eb',
+                        'dark-bg': '#111827',
+                        'dark-text': '#f3f4f6',
+                        'dark-card': '#1f2937',
+                        'dark-border': '#374151',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Basic styling for theme transition */
+        body, .screen { transition: background-color 0.3s ease, color 0.3s ease; }
+    </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body class="bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text font-sans antialiased">
+    
+    <div id="app" class="max-w-screen-lg mx-auto p-4">
+
+        <header class="flex justify-between items-center mb-4">
+            <h1 class="text-2xl font-bold text-custom-blue dark:text-custom-blue-light">AHADU MARKET</h1>
+            <button id="theme-toggle" class="p-2 rounded-full bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border">
+                <svg id="theme-icon-light" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                <svg id="theme-icon-dark" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 16.464A1 1 0 106.465 15.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-1.414-2.121a1 1 0 011.414 0l.707.707a1 1 0 11-1.414 1.414l-.707-.707a1 1 0 010-1.414zM3 11a1 1 0 100-2H2a1 1 0 100 2h1z" clip-rule="evenodd"></path></svg>
+            </button>
+        </header>
+        
+        <main>
+            <div id="screen-loading" class="screen text-center p-10">
+                <p>Loading Ahadu Market...</p>
+            </div>
+
+            <div id="screen-registration" class="screen hidden">
+                <h2 class="text-xl font-semibold mb-4">Complete Your Registration</h2>
+                <form id="registration-form" class="space-y-4">
+                    <div>
+                        <label for="reg-name" class="block text-sm font-medium">Full Name</label>
+                        <input type="text" id="reg-name" required class="mt-1 block w-full px-3 py-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-md shadow-sm focus:outline-none focus:ring-custom-blue focus:border-custom-blue">
+                    </div>
+                    <div>
+                        <label for="reg-phone" class="block text-sm font-medium">Phone Number</label>
+                        <input type="tel" id="reg-phone" required class="mt-1 block w-full px-3 py-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-md shadow-sm focus:outline-none focus:ring-custom-blue focus:border-custom-blue">
+                    </div>
+                    <button type="submit" class="w-full bg-custom-blue text-white py-2 px-4 rounded-md hover:bg-custom-blue-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue">Submit Registration</button>
+                </form>
+            </div>
+            
+            <div id="screen-pending" class="screen hidden text-center p-10">
+                <h2 class="text-xl font-semibold mb-2">Registration Submitted</h2>
+                <p>Your registration is pending approval from an admin. We'll notify you once you're approved!</p>
+            </div>
+
+            <div id="screen-salesperson" class="screen hidden">
+                <div class="border-b border-light-border dark:border-dark-border mb-4">
+                    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                        <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-custom-blue text-custom-blue" data-tab="salesperson-portal">My Portal</button>
+                        <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent hover:border-gray-300" data-tab="salesperson-leaderboard">Leaderboard</button>
+                    </nav>
+                </div>
+                <div id="salesperson-portal" class="tab-content"></div>
+                <div id="salesperson-leaderboard" class="tab-content hidden"></div>
+            </div>
+
+            <div id="screen-admin" class="screen hidden">
+                <div class="border-b border-light-border dark:border-dark-border mb-4">
+                    <nav class="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
+                         <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-custom-blue text-custom-blue" data-tab="admin-approvals">Approvals</button>
+                         <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent hover:border-gray-300" data-tab="admin-orders">Orders</button>
+                         <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent hover:border-gray-300" data-tab="admin-products">Products</button>
+                         <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent hover:border-gray-300" data-tab="admin-payouts">Payouts</button>
+                         <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent hover:border-gray-300" data-tab="admin-leaderboard">Leaderboard</button>
+                    </nav>
+                </div>
+                <div id="admin-approvals" class="tab-content"></div>
+                <div id="admin-orders" class="tab-content hidden"></div>
+                <div id="admin-products" class="tab-content hidden"></div>
+                <div id="admin-payouts" class="tab-content hidden"></div>
+                <div id="admin-leaderboard" class="tab-content hidden"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+
+// --- State Management ---
+let state = {
+    user: null,
+    products: [],
+    myOrders: [],
+    pendingUsers: [],
+    pendingOrders: [],
+    payouts: [],
+    leaderboard: [],
+};
+
+// --- DOM Elements ---
+const screens = {
+    loading: document.getElementById('screen-loading'),
+    registration: document.getElementById('screen-registration'),
+    pending: document.getElementById('screen-pending'),
+    salesperson: document.getElementById('screen-salesperson'),
+    admin: document.getElementById('screen-admin'),
+};
+
+const registrationForm = document.getElementById('registration-form');
+
+// --- Helper Functions ---
+const apiRequest = async (endpoint, method = 'GET', body = null) => {
+    try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (method !== 'GET') {
+            headers['X-Telegram-Init-Data'] = tg.initData;
+        }
+
+        const options = {
+            method,
+            headers,
+        };
+
+        if (body) {
+            options.body = JSON.stringify(body);
+        }
+
+        const response = await fetch(`/api/${endpoint}`, options);
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('API Request Error:', error);
+        tg.showAlert(`Error: ${error.message}`);
+        return null;
+    }
+};
+
+const showScreen = (screenId) => {
+    Object.values(screens).forEach(screen => screen.classList.add('hidden'));
+    if (screens[screenId]) {
+        screens[screenId].classList.remove('hidden');
+    }
+};
+
+// --- UI Rendering Functions ---
+const renderLeaderboard = (data) => {
+    if (!data || data.length === 0) return `<p>No sales data for this month yet.</p>`;
+    let html = `<div class="space-y-3">`;
+    data.forEach((item, index) => {
+        html += `
+            <div class="bg-light-card dark:bg-dark-card p-4 rounded-lg shadow flex justify-between items-center border border-light-border dark:border-dark-border">
+                <div class="flex items-center">
+                    <span class="font-bold mr-4 text-lg">${index + 1}</span>
+                    <span class="font-semibold">${item.name}</span>
+                </div>
+                <span class="text-green-500 font-bold">$${item.sales.toLocaleString()}</span>
+            </div>`;
+    });
+    html += `</div>`;
+    return html;
+};
+
+const renderSalespersonPortal = () => {
+    let inventoryHtml = state.products.map(p => `
+        <option value="${p.id}" ${p.quantity === 0 ? 'disabled' : ''}>
+            ${p.name} (${p.quantity} in stock) - $${p.price.toLocaleString()}
+        </option>
+    `).join('');
+
+    let myOrdersHtml = state.myOrders.length > 0 ? state.myOrders.map(o => `
+        <div class="bg-light-card dark:bg-dark-card p-3 rounded-lg border border-light-border dark:border-dark-border">
+            <div class="flex justify-between items-center">
+                <p class="font-bold">${o.product_name}</p>
+                <span class="text-sm font-semibold 
+                    ${o.status === 'COMPLETED' ? 'text-green-500' : o.status === 'CANCELLED' ? 'text-red-500' : 'text-yellow-500'}">
+                    ${o.status}
+                </span>
+            </div>
+            <p class="text-sm">Customer: ${o.customer_name} - Price: $${o.product_price.toLocaleString()}</p>
+        </div>
+    `).join('') : '<p>You have not logged any sales yet.</p>';
+
+    return `
+        <div class="space-y-6">
+            <div>
+                <h3 class="text-lg font-semibold mb-3">Log a New Sale</h3>
+                <form id="log-sale-form" class="space-y-4 bg-light-card dark:bg-dark-card p-4 rounded-lg border border-light-border dark:border-dark-border">
+                    <div>
+                        <label for="product-select" class="block text-sm font-medium">Product</label>
+                        <select id="product-select" required class="mt-1 block w-full p-2 bg-white dark:bg-gray-700 border border-light-border dark:border-dark-border rounded-md">
+                            <option value="">Select a product...</option>
+                            ${inventoryHtml}
+                            <option value="other">-- Other --</option>
+                        </select>
+                    </div>
+                    <div id="other-product-fields" class="hidden space-y-2">
+                        <input type="text" id="other-product-name" placeholder="Laptop Name" class="block w-full p-2 bg-white dark:bg-gray-700 border border-light-border dark:border-dark-border rounded-md">
+                        <input type="number" id="other-product-price" placeholder="Price" class="block w-full p-2 bg-white dark:bg-gray-700 border border-light-border dark:border-dark-border rounded-md">
+                    </div>
+                    <div>
+                        <label for="customer-name" class="block text-sm font-medium">Customer Full Name</label>
+                        <input type="text" id="customer-name" required class="mt-1 block w-full p-2 bg-white dark:bg-gray-700 border border-light-border dark:border-dark-border rounded-md">
+                    </div>
+                    <div>
+                        <label for="customer-phone" class="block text-sm font-medium">Customer Phone Number</label>
+                        <input type="tel" id="customer-phone" required class="mt-1 block w-full p-2 bg-white dark:bg-gray-700 border border-light-border dark:border-dark-border rounded-md">
+                    </div>
+                    <button type="submit" class="w-full bg-custom-blue text-white py-2 px-4 rounded-md hover:bg-custom-blue-dark">Log Sale</button>
+                </form>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold mb-3">My Order History</h3>
+                <div class="space-y-2">${myOrdersHtml}</div>
+            </div>
+        </div>
+    `;
+};
+
+// --- ADMIN Rendering Functions ---
+const renderAdminApprovals = () => {
+    const contentEl = document.getElementById('admin-approvals');
+    if (!state.pendingUsers || state.pendingUsers.length === 0) {
+        contentEl.innerHTML = `<p>No users are currently pending approval.</p>`;
+        return;
+    }
+    contentEl.innerHTML = `
+        <div class="space-y-3">
+            ${state.pendingUsers.map(u => `
+                <div class="bg-light-card dark:bg-dark-card p-4 rounded-lg shadow flex justify-between items-center border border-light-border dark:border-dark-border">
+                    <div>
+                        <p class="font-semibold">${u.first_name}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">${u.username ? '@' + u.username : 'No username'}</p>
+                    </div>
+                    <button class="approve-user-btn bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600" data-userid="${u.id}">Approve</button>
+                </div>
+            `).join('')}
+        </div>
+    `;
+};
+
+const renderAdminOrders = () => {
+    const contentEl = document.getElementById('admin-orders');
+    if (!state.pendingOrders || state.pendingOrders.length === 0) {
+        contentEl.innerHTML = `<p>There are no pending orders.</p>`;
+        return;
+    }
+    contentEl.innerHTML = `
+        <div class="space-y-3">
+            ${state.pendingOrders.map(o => `
+                <div class="bg-light-card dark:bg-dark-card p-4 rounded-lg shadow border border-light-border dark:border-dark-border">
+                    <p><b>Product:</b> ${o.product_name} ($${o.product_price.toLocaleString()})</p>
+                    <p><b>Salesperson:</b> ${o.salesperson_name}</p>
+                    <p><b>Customer:</b> ${o.customer_name} (${o.customer_phone})</p>
+                    <div class="mt-3 flex space-x-2">
+                        <button class="order-action-btn flex-1 bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600" data-orderid="${o.id}" data-action="approve">Approve</button>
+                        <button class="order-action-btn flex-1 bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600" data-orderid="${o.id}" data-action="reject">Reject</button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+};
+
+const renderAdminProducts = () => {
+    const contentEl = document.getElementById('admin-products');
+    let productsHtml = state.products.map(p => `
+        <div class="bg-light-card dark:bg-dark-card p-3 rounded-lg flex justify-between items-center border border-light-border dark:border-dark-border">
+            <div>
+                <p class="font-bold">${p.name} <span class="text-sm font-normal">(${p.quantity} left)</span></p>
+                <p class="text-sm">$${p.price.toLocaleString()} - ${p.specs || 'No specs'}</p>
+            </div>
+            <button class="delete-product-btn text-red-500 hover:text-red-700" data-productid="${p.id}">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+    `).join('');
+
+    contentEl.innerHTML = `
+        <div class="space-y-6">
+            <div>
+                <h3 class="text-lg font-semibold mb-3">Add New Product</h3>
+                <form id="add-product-form" class="space-y-3 bg-light-card dark:bg-dark-card p-4 rounded-lg border border-light-border dark:border-dark-border">
+                    <input type="text" id="new-product-name" placeholder="Product Name" required class="w-full p-2 bg-white dark:bg-gray-700 border rounded-md">
+                    <input type="number" id="new-product-price" placeholder="Price" required class="w-full p-2 bg-white dark:bg-gray-700 border rounded-md">
+                    <input type="number" id="new-product-quantity" placeholder="Quantity" required class="w-full p-2 bg-white dark:bg-gray-700 border rounded-md">
+                    <textarea id="new-product-specs" placeholder="Specs (optional)" class="w-full p-2 bg-white dark:bg-gray-700 border rounded-md"></textarea>
+                    <button type="submit" class="w-full bg-custom-blue text-white py-2 rounded-md">Add Product</button>
+                </form>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold mb-3">Current Inventory</h3>
+                <div class="space-y-2">${productsHtml}</div>
+            </div>
+        </div>
+    `;
+};
+
+const renderAdminPayouts = () => {
+    const contentEl = document.getElementById('admin-payouts');
+    if (!state.payouts || state.payouts.length === 0) {
+        contentEl.innerHTML = `<p>No salesperson data available.</p>`;
+        return;
+    }
+    contentEl.innerHTML = `
+        <div class="space-y-3">
+            ${state.payouts.map(p => `
+                <div class="bg-light-card dark:bg-dark-card p-4 rounded-lg shadow border border-light-border dark:border-dark-border">
+                    <div class="flex justify-between items-start">
+                        <p class="font-bold text-lg">${p.name}</p>
+                        <button class="mark-paid-btn bg-custom-blue text-white px-3 py-1 rounded-md text-sm hover:bg-custom-blue-dark ${p.unpaid_commission > 0 ? '' : 'opacity-50 cursor-not-allowed'}" data-userid="${p.id}" ${p.unpaid_commission > 0 ? '' : 'disabled'}>Mark Paid</button>
+                    </div>
+                    <div class="mt-2 grid grid-cols-2 gap-2 text-sm">
+                        <p>Total Sales: <span class="font-semibold">$${p.total_sales.toLocaleString()}</span></p>
+                        <p>Total Commission: <span class="font-semibold">$${p.total_commission.toLocaleString()}</span></p>
+                        <p class="col-span-2 text-green-500">Unpaid Commission: <span class="font-bold text-lg">$${p.unpaid_commission.toLocaleString()}</span></p>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+};
+
+
+// --- App Logic ---
+const handleTabClick = (event) => {
+    const clickedTab = event.target.closest('.tab-button');
+    if (!clickedTab) return;
+
+    const allTabs = clickedTab.closest('nav').querySelectorAll('.tab-button');
+    allTabs.forEach(tab => {
+        tab.classList.remove('border-custom-blue', 'text-custom-blue');
+        tab.classList.add('border-transparent', 'hover:border-gray-300');
+        document.getElementById(tab.dataset.tab).classList.add('hidden');
+    });
+
+    clickedTab.classList.add('border-custom-blue', 'text-custom-blue');
+    clickedTab.classList.remove('border-transparent', 'hover:border-gray-300');
+    document.getElementById(clickedTab.dataset.tab).classList.remove('hidden');
+};
+
+const updateAdminUI = (data) => {
+    state.pendingUsers = data.pending_users;
+    state.pendingOrders = data.pending_orders;
+    state.products = data.products;
+    state.payouts = data.payouts;
+    state.leaderboard = data.leaderboard;
+
+    renderAdminApprovals();
+    renderAdminOrders();
+    renderAdminProducts();
+    renderAdminPayouts();
+    document.getElementById('admin-leaderboard').innerHTML = renderLeaderboard(state.leaderboard);
+}
+
+const initializeApp = async () => {
+    tg.ready();
+    tg.expand();
+    
+    const data = await apiRequest('init', 'POST', { initData: tg.initData });
+    if (!data) {
+        showScreen('loading'); // or an error screen
+        tg.showAlert('Could not initialize the app. Please try again.');
+        return;
+    }
+
+    state.user = data.user;
+
+    if (!state.user.phone_number && state.user.status !== 'ADMIN') {
+        document.getElementById('reg-name').value = state.user.first_name;
+        showScreen('registration');
+    } else if (state.user.status === 'PENDING') {
+        showScreen('pending');
+    } else if (state.user.status === 'APPROVED') {
+        state.products = data.products;
+        state.myOrders = data.my_orders;
+        state.leaderboard = data.leaderboard;
+        document.getElementById('salesperson-portal').innerHTML = renderSalespersonPortal();
+        document.getElementById('salesperson-leaderboard').innerHTML = renderLeaderboard(state.leaderboard);
+        showScreen('salesperson');
+    } else if (state.user.status === 'ADMIN') {
+        updateAdminUI(data);
+        showScreen('admin');
+    }
+};
+
+// --- Event Listeners ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Theme Management
+    const themeToggle = document.getElementById('theme-toggle');
+    const lightIcon = document.getElementById('theme-icon-light');
+    const darkIcon = document.getElementById('theme-icon-dark');
+    
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        lightIcon.classList.add('hidden');
+        darkIcon.classList.remove('hidden');
+    }
+
+    themeToggle.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+        lightIcon.classList.toggle('hidden');
+        darkIcon.classList.toggle('hidden');
+        localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    });
+
+    // Registration Form
+    registrationForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const first_name = document.getElementById('reg-name').value;
+        const phone_number = document.getElementById('reg-phone').value;
+        const result = await apiRequest('register', 'POST', { first_name, phone_number });
+        if(result) {
+            state.user.status = result.user_status;
+            showScreen('pending');
+            tg.showAlert('Registration complete! An admin will review your application.');
+        }
+    });
+    
+    // Main Content clicks (delegated)
+    document.getElementById('app').addEventListener('click', async (e) => {
+        // Tab switching
+        if (e.target.closest('.tab-button')) {
+            handleTabClick(e);
+        }
+        // Admin: Approve User
+        if (e.target.matches('.approve-user-btn')) {
+            const userId = e.target.dataset.userid;
+            const data = await apiRequest(`admin/approve_user/${userId}`, 'POST');
+            if (data) {
+                tg.showAlert('User approved successfully!');
+                updateAdminUI(data);
+            }
+        }
+        // Admin: Update Order
+        if (e.target.matches('.order-action-btn')) {
+            const orderId = e.target.dataset.orderid;
+            const action = e.target.dataset.action;
+            const data = await apiRequest(`admin/order/${orderId}`, 'POST', { action });
+            if (data) {
+                tg.showAlert(`Order has been ${action}ed.`);
+                updateAdminUI(data);
+            }
+        }
+        // Admin: Delete Product
+        if (e.target.closest('.delete-product-btn')) {
+            const productId = e.target.closest('.delete-product-btn').dataset.productid;
+            if (confirm('Are you sure you want to delete this product?')) {
+                const data = await apiRequest(`admin/product?id=${productId}`, 'DELETE');
+                if (data) {
+                    tg.showAlert('Product deleted.');
+                    updateAdminUI(data);
+                }
+            }
+        }
+        // Admin: Mark Paid
+        if (e.target.matches('.mark-paid-btn')) {
+            const userId = e.target.dataset.userid;
+            const data = await apiRequest(`admin/mark_paid/${userId}`, 'POST');
+            if(data) {
+                tg.showAlert('Commission marked as paid.');
+                updateAdminUI(data);
+            }
+        }
+    });
+
+    // Main Content form submissions (delegated)
+    document.getElementById('app').addEventListener('submit', async (e) => {
+        // Salesperson: Log Sale
+        if (e.target.id === 'log-sale-form') {
+            e.preventDefault();
+            const form = e.target;
+            const payload = {
+                productId: form.elements['product-select'].value,
+                customer_name: form.elements['customer-name'].value,
+                customer_phone: form.elements['customer-phone'].value,
+            };
+            if (payload.productId === 'other') {
+                payload.other_product_name = form.elements['other-product-name'].value;
+                payload.other_product_price = form.elements['other-product-price'].value;
+            }
+            const result = await apiRequest('sales', 'POST', payload);
+            if (result) {
+                tg.showAlert('Sale logged successfully! It is now pending admin approval.');
+                form.reset();
+                // For a better UX, you might want to refresh the data here
+            }
+        }
+        // Admin: Add Product
+        if (e.target.id === 'add-product-form') {
+            e.preventDefault();
+            const form = e.target;
+            const payload = {
+                name: form.elements['new-product-name'].value,
+                price: form.elements['new-product-price'].value,
+                quantity: form.elements['new-product-quantity'].value,
+                specs: form.elements['new-product-specs'].value,
+            };
+            const data = await apiRequest('admin/product', 'POST', payload);
+            if (data) {
+                tg.showAlert('Product added successfully.');
+                form.reset();
+                updateAdminUI(data);
+            }
+        }
+    });
+    
+    // Show/hide 'Other' product fields
+    document.getElementById('app').addEventListener('change', (e) => {
+        if (e.target.id === 'product-select') {
+            const otherFields = document.getElementById('other-product-fields');
+            if (e.target.value === 'other') {
+                otherFields.classList.remove('hidden');
+                otherFields.querySelectorAll('input').forEach(input => input.required = true);
+            } else {
+                otherFields.classList.add('hidden');
+                otherFields.querySelectorAll('input').forEach(input => input.required = false);
+            }
+        }
+    });
+
+    // Initialize the app
+    initializeApp();
+});
+    </script>
+</body>
+</html>
